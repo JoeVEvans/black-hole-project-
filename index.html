@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Black Hole with Fiery Particle Ring</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.110/examples/js/controls/OrbitControls.js"></script> <!-- Added OrbitControls -->
+</head>
+<body>
+    <script>
+        // Set up the scene, camera, and renderer
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+        var renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Add lighting to the scene
+        var light = new THREE.PointLight(0xffffff, 1, 100);
+        light.position.set(-10, 10, 10); // Light on the left
+        scene.add(light);
+
+        var ambientLight = new THREE.AmbientLight(0x404040); // Soft ambient light
+        scene.add(ambientLight);
+
+        // Create black sphere for the black hole
+        var blackHoleGeometry = new THREE.SphereGeometry(1, 64, 64); // Smooth black sphere
+        var blackHoleMaterial = new THREE.MeshPhongMaterial({
+            color: 0x000000, // Black color
+        });
+        var blackHole = new THREE.Mesh(blackHoleGeometry, blackHoleMaterial);
+        scene.add(blackHole);
+
+        // Create fiery particle ring around the black hole
+        var ringParticlesGeometry = new THREE.TorusGeometry(1.5, 0.05, 16, 100);
+        var particleMaterial = new THREE.PointsMaterial({
+            color: 0xFF4500, // Fiery orange color
+            size: 0.05, // Particle size
+            transparent: true,
+            opacity: 0.8,
+        });
+
+        // Create particle points
+        var particleRing = new THREE.Points(ringParticlesGeometry, particleMaterial);
+        particleRing.rotation.x = Math.PI / 2; // Rotate the ring horizontally
+        scene.add(particleRing);
+
+        // Create stars
+        function createStars() {
+            var starGeometry = new THREE.BufferGeometry();
+            var starMaterial = new THREE.PointsMaterial({ color: 0xffffff });
+
+            var starVertices = [];
+            for (var i = 0; i < 10000; i++) {
+                var x = (Math.random() - 0.5) * 2000;
+                var y = (Math.random() - 0.5) * 2000;
+                var z = (Math.random() - 0.5) * 2000;
+                starVertices.push(x, y, z);
+            }
+
+            starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+            var stars = new THREE.Points(starGeometry, starMaterial);
+            scene.add(stars);
+        }
+
+        createStars(); // Call the function to create stars
+
+        // Position the camera
+        camera.position.z = 5;
+
+        // Add orbit controls to allow looking around the black hole
+        var controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; // Adds smoothness to the controls
+        controls.dampingFactor = 0.05;
+
+        // Render the scene
+        function animate() {
+            requestAnimationFrame(animate);
+            blackHole.rotation.y += 0.005; // Slow black hole rotation
+            particleRing.rotation.y += 0.01; // Rotate the particle ring
+            controls.update(); // Update the controls on each frame
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+</html>
