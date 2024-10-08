@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Black Hole with Fiery Particle Ring</title>
+    <title>Black Hole with Accretion Disk</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.110/examples/js/controls/OrbitControls.js"></script> <!-- Added OrbitControls -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.110/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
     <script>
@@ -17,7 +17,7 @@
 
         // Add lighting to the scene
         var light = new THREE.PointLight(0xffffff, 1, 100);
-        light.position.set(-10, 10, 10); // Light on the left
+        light.position.set(-10, 10, 10);
         scene.add(light);
 
         var ambientLight = new THREE.AmbientLight(0x404040); // Soft ambient light
@@ -31,19 +31,66 @@
         var blackHole = new THREE.Mesh(blackHoleGeometry, blackHoleMaterial);
         scene.add(blackHole);
 
-        // Create fiery particle ring around the black hole
-        var ringParticlesGeometry = new THREE.TorusGeometry(1.5, 0.05, 16, 100);
-        var particleMaterial = new THREE.PointsMaterial({
-            color: 0xFF4500, // Fiery orange color
-            size: 0.05, // Particle size
+        // Create a glowing accretion disk (torus) around the black hole
+        var diskGeometry = new THREE.TorusGeometry(1.5, 0.2, 16, 100); // Thicker torus for disk
+        var diskMaterial = new THREE.MeshBasicMaterial({
+            color: 0xFFD700, // Gold color
+            emissive: 0xFF4500, // Orange glow effect
+            emissiveIntensity: 0.8, // Higher intensity for glow
             transparent: true,
-            opacity: 0.8,
+            opacity: 0.7
         });
+        var accretionDisk = new THREE.Mesh(diskGeometry, diskMaterial);
+        accretionDisk.rotation.x = Math.PI / 2; // Rotate the disk horizontally
+        scene.add(accretionDisk);
 
-        // Create particle points
-        var particleRing = new THREE.Points(ringParticlesGeometry, particleMaterial);
-        particleRing.rotation.x = Math.PI / 2; // Rotate the ring horizontally
-        scene.add(particleRing);
+        // Create particles that spiral toward the black hole
+        function createParticles() {
+            var particleGeometry = new THREE.BufferGeometry();
+            var particleCount = 500;
+            var particlePositions = [];
+
+            for (var i = 0; i < particleCount; i++) {
+                var x = (Math.random() - 0.5) * 10;
+                var y = (Math.random() - 0.5) * 10;
+                var z = (Math.random() - 0.5) * 10;
+                particlePositions.push(x, y, z);
+            }
+
+            particleGeometry.setAttribute('position', new THREE.Float32BufferAttribute(particlePositions, 3));
+
+            var particleMaterial = new THREE.PointsMaterial({
+                color: 0xFFFFFF,
+                size: 0.05,
+                transparent: true,
+                opacity: 0.8
+            });
+
+            var particles = new THREE.Points(particleGeometry, particleMaterial);
+            scene.add(particles);
+
+            // Animate particles to spiral inward toward the black hole
+            function animateParticles() {
+                var positions = particleGeometry.attributes.position.array;
+                for (var i = 0; i < particleCount * 3; i += 3) {
+                    var distance = Math.sqrt(positions[i] * positions[i] + positions[i + 1] * positions[i + 1]);
+                    var angle = Math.atan2(positions[i + 1], positions[i]);
+
+                    // Move particles inward and rotate them
+                    positions[i] -= Math.cos(angle) * 0.01;
+                    positions[i + 1] -= Math.sin(angle) * 0.01;
+
+                    // Bring particles closer to the black hole
+                    positions[i + 2] -= 0.01;
+                }
+
+                particleGeometry.attributes.position.needsUpdate = true;
+            }
+
+            return animateParticles;
+        }
+
+        var animateParticles = createParticles(); // Create particles and get the animation function
 
         // Create stars
         function createStars() {
@@ -77,7 +124,8 @@
         function animate() {
             requestAnimationFrame(animate);
             blackHole.rotation.y += 0.005; // Slow black hole rotation
-            particleRing.rotation.y += 0.01; // Rotate the particle ring
+            accretionDisk.rotation.y += 0.01; // Rotate the disk
+            animateParticles(); // Animate the particles
             controls.update(); // Update the controls on each frame
             renderer.render(scene, camera);
         }
